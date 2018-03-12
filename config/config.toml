@@ -2,6 +2,11 @@
 
 update_interval = 60
 
+[web]
+debug_mode = true
+unix_socket = "mtd.http.socket"
+http_port = "9000"
+
 # Plugins
 
 [plugins.nginx]
@@ -53,10 +58,6 @@ level = "DEBUG"
 
 [logging.loggers.mtd]
 level = "DEBUG"
-
-
-#[logging.loggers."venvui.services.systemd"]
-#level = "INFO"
 
 [logging.formatters.colored.log_colors]
 CRITICAL = "red,bg_white"

@@ -6,9 +6,11 @@ import logging.config
 from asyncio import ensure_future
 from pathlib import Path
 
+from aiohttp import web
 import toml
 
 from mtd.metric import MetricType
+from mtd.webapp import create_webapp, start_webapp
 
 logger = logging.getLogger(__name__)
 here_path = Path(__file__).parent
@@ -23,13 +25,17 @@ def main(args=None):
     return App(config_file=args.config).run()
 
 
+
+
 class App:
     def __init__(self, config_file):
         self.config_file = config_file
         self.store = {}
+        self.config = self.load_config(self.config_file)
+        self.webapp = create_webapp(self.config['web'])
 
     def run(self):
-        config = self.load_config(self.config_file)
+        config = self.config
         logging.config.dictConfig(config['logging'])
         logging.captureWarnings(True)
         logger.info('Logging configured!')
@@ -58,13 +64,19 @@ class App:
         logger.debug('[%s] %s: %r', metric_type, key, self.store[key])
 
     async def main_loop(self):
+        runner = await start_webapp(self.webapp, self.config['web'])
+        running = True
+
         for plugin in self.plugins.values():
             self.start_plugin(plugin)
+
         logger.info("Updating with interval: %s", self.update_interval)
-        while True:
+        while running:
             for plugin in self.plugins.values():
                 self.update_plugin(plugin)
             await asyncio.sleep(self.update_interval)
+
+        await runner.cleanup()
 
     def start_plugin(self, plugin):
         def loop_done(fut):

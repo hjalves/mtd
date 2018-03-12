@@ -35,7 +35,13 @@ class NginxPlugin(BasePlugin):
         return self.process.terminate()
 
     def process_records(self, records):
+        request = records.get('request')
         status = records.get('status')
+        remote_addr = records.get('remote_addr')
+        http_x_forwarded_for = records.get('http_x_forwarded_for')
+        if http_x_forwarded_for and http_x_forwarded_for != '-':
+            remote_addr = http_x_forwarded_for
+        self.logger.debug('%s: %s [status: %s] ', remote_addr, request, status)
         if status and len(status) == 3:
             comb_status = status[0] + 'xx'
             self.push(status, 1, MetricType.COUNTER)
