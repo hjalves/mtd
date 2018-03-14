@@ -6,11 +6,11 @@ import logging.config
 from asyncio import ensure_future
 from pathlib import Path
 
-from aiohttp import web
 import toml
 
 from mtd.metric import MetricType
 from mtd.pubsub import MetricPubSub
+from mtd.wamp import create_component
 from mtd.webapp import create_webapp, start_webapp
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,7 @@ class App:
         self.pubsub = MetricPubSub()
         self.config = self.load_config(self.config_file)
         self.webapp = create_webapp(self.config['web'], self.pubsub)
+        self.wamp = create_component(self.config['wamp'], self.pubsub)
 
     def run(self):
         config = self.config
@@ -69,6 +70,7 @@ class App:
         runner = await start_webapp(self.webapp, self.config['web'])
         running = True
 
+        self.start_wamp(self.wamp)
         for plugin in self.plugins.values():
             self.start_plugin(plugin)
 
@@ -79,6 +81,11 @@ class App:
             await asyncio.sleep(self.update_interval)
 
         await runner.cleanup()
+
+    def start_wamp(self, component):
+        def component_done(fut):
+            logger.warning("Component %r exited [%r]", component, fut.result())
+        ensure_future(component.start()).add_done_callback(component_done)
 
     def start_plugin(self, plugin):
         def loop_done(fut):

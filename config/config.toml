@@ -7,6 +7,10 @@ debug_mode = true
 unix_socket = "mtd.http.socket"
 http_port = "9000"
 
+[wamp]
+router = "ws://localhost:8080/ws"
+realm = "latitude"
+
 # Plugins
 
 [plugins.nginx]
