@@ -36,9 +36,4 @@ def create_component(config, pubsub):
         subscriber.session = None
         logger.info("Session left! %s %s", session, details)
 
-    @comp.register("mtd.debug")
-    async def subscribe(*args, **kw):
-        logger.debug("debug called: {}, {}".format(args, kw))
-        return 42
-
     return comp
