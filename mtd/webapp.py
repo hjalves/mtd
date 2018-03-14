@@ -1,23 +1,23 @@
 import asyncio
 import logging
 from pathlib import Path
-from traceback import format_exception_only
 
 from aiohttp import web
 
+from mtd.utils import format_exception
 from mtd.websocket import websocket_handler
 
 logger = logging.getLogger(__name__)
 
 
 
-def create_webapp(config):
+def create_webapp(config, pubsub):
     webapp = web.Application(
         middlewares=[error_middleware],
         debug=config['debug_mode'],
         logger=logger
     )
-    webapp['pubsub'] = None
+    webapp['pubsub'] = pubsub
     webapp.router.add_get('/ws/', websocket_handler)
     return webapp
 
@@ -48,9 +48,6 @@ def json_error(error, status):
     message = {'error': error, 'status': status}
     return web.json_response(message, status=status)
 
-
-def format_exception(ex):
-    return format_exception_only(ex.__class__, ex)[-1].strip()
 
 
 @web.middleware

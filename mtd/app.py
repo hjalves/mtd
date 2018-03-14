@@ -10,6 +10,7 @@ from aiohttp import web
 import toml
 
 from mtd.metric import MetricType
+from mtd.pubsub import MetricPubSub
 from mtd.webapp import create_webapp, start_webapp
 
 logger = logging.getLogger(__name__)
@@ -25,14 +26,13 @@ def main(args=None):
     return App(config_file=args.config).run()
 
 
-
-
 class App:
     def __init__(self, config_file):
         self.config_file = config_file
         self.store = {}
+        self.pubsub = MetricPubSub()
         self.config = self.load_config(self.config_file)
-        self.webapp = create_webapp(self.config['web'])
+        self.webapp = create_webapp(self.config['web'], self.pubsub)
 
     def run(self):
         config = self.config
@@ -58,10 +58,12 @@ class App:
     def push(self, plugin_name, metric_type, key, value):
         key = plugin_name + '.' + key
         if metric_type == MetricType.COUNTER:
-            self.store[key] = self.store.get(key, 0) + value
+            value = self.store.get(key, 0) + value
         else:
-            self.store[key] = value
-        logger.debug('[%s] %s: %r', metric_type, key, self.store[key])
+            value = value
+        self.store[key] = value
+        self.pubsub.publish(key, value)
+        logger.debug('[%s] %s: %r', metric_type, key, value)
 
     async def main_loop(self):
         runner = await start_webapp(self.webapp, self.config['web'])

@@ -57,6 +57,9 @@ level = "DEBUG"
 level = "DEBUG"
 
 [logging.loggers.mtd]
+level = "INFO"
+
+[logging.loggers."mtd.pubsub"]
 level = "DEBUG"
 
 [logging.formatters.colored.log_colors]
