@@ -57,7 +57,8 @@ class NginxPlugin(BasePlugin):
     def stderr_cb(self, line):
         line = line.decode(errors='replace')
         self.logger.error('stderr: %r', line)
-        self.stop()
+        # TODO: this should be improved
+        #self.stop()
 
 
 Plugin = NginxPlugin

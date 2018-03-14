@@ -16,7 +16,7 @@ realm = "latitude"
 [plugins.nginx]
 plugin = "nginx"
 logfile = "/var/log/nginx/access.log"
-#logformat
+#logformat = "$remote_addr | $http_x_forwarded_for - $remote_user [$time_local] \"$request\" $status $body_bytes_sent \"$http_referer\" \"$http_user_agent\""
 
 [plugins.glances]
 plugin = "zmq"
@@ -64,7 +64,7 @@ level = "DEBUG"
 level = "INFO"
 
 [logging.loggers."mtd.pubsub"]
-level = "DEBUG"
+level = "INFO"
 
 [logging.formatters.colored.log_colors]
 CRITICAL = "red,bg_white"
