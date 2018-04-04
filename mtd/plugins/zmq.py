@@ -29,7 +29,8 @@ class ZmqPlugin(BasePlugin):
             data = json.loads(data_raw)
             plugin = plugin.decode()
             for key, value in data.items():
-                self.push(plugin + '.' + key.replace(' ', '_'), value)
+                sanitized_key = key.replace(' ', '_').replace('/', '_')
+                self.push(plugin + '.' + sanitized_key, value)
         subscriber.close()
         context.term()
 
