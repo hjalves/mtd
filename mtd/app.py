@@ -108,10 +108,10 @@ class App:
         start = time.time()
         coros = [plugin.update() for plugin in self.plugins.values()]
         result = await gather(*coros, return_exceptions=True)
-        failed = len([x for x in result if isinstance(x, Exception)])
-        success = len(result) - failed
-        logger.info("Updated plugins %s, failed %s [%.2f msec]: %s",
-                     success, failed, (time.time() - start) * 1000, result)
+        # failed = len([x for x in result if isinstance(x, Exception)])
+        logger.info("Updated plugins %s [%.2f msec]: %s",
+                     ', '.join(self.plugins), (time.time() - start) * 1000,
+                    result)
 
     def load_store_state(self):
         file_path = self.config['store_location']
