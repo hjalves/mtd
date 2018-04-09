@@ -46,6 +46,7 @@ class NginxPlugin(BasePlugin):
             comb_status = status[0] + 'xx'
             self.push(status, 1, MetricType.COUNTER)
             self.push(comb_status, 1, MetricType.COUNTER)
+            self.push('requests', 1, MetricType.COUNTER)
 
     def stdout_cb(self, line):
         line = line.decode(errors='replace')

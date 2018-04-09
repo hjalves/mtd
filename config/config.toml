@@ -1,6 +1,7 @@
 # Config file for mtd
 
-update_interval = 60
+update_interval = 30
+store_location = "mtd.store.json"
 
 [web]
 debug_mode = true

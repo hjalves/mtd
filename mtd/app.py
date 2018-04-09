@@ -1,8 +1,13 @@
 import argparse
 import asyncio
 import importlib
+import json
 import logging
 import logging.config
+import os
+import shutil
+import time
+from asyncio import gather
 from asyncio import ensure_future
 from pathlib import Path
 
@@ -41,6 +46,7 @@ class App:
         logging.captureWarnings(True)
         logger.info('Logging configured!')
 
+        self.load_store_state()
         self.update_interval = config.get('update_interval', 30)
 
         plugins_conf = config.get('plugins', {})
@@ -76,8 +82,8 @@ class App:
 
         logger.info("Updating with interval: %s", self.update_interval)
         while running:
-            for plugin in self.plugins.values():
-                self.update_plugin(plugin)
+            await self.update_plugins()
+            self.save_store_state()
             await asyncio.sleep(self.update_interval)
 
         await runner.cleanup()
@@ -97,6 +103,31 @@ class App:
         def update_done(fut):
             logger.debug("Plugin %r updated [%r]", plugin.name, fut.result())
         ensure_future(plugin.update()).add_done_callback(update_done)
+
+    async def update_plugins(self):
+        start = time.time()
+        coros = [plugin.update() for plugin in self.plugins.values()]
+        result = await gather(*coros, return_exceptions=True)
+        failed = len([x for x in result if isinstance(x, Exception)])
+        success = len(result) - failed
+        logger.info("Updated plugins %s, failed %s [%.2f msec]: %s",
+                     success, failed, (time.time() - start) * 1000, result)
+
+    def load_store_state(self):
+        file_path = self.config['store_location']
+        with open(file_path) as f:
+            self.store = json.load(f)
+
+    def save_store_state(self):
+        # TODO: this should not be blocking
+        start = time.time()
+        file_path = self.config['store_location']
+        tempname = file_path + '.tmp'
+        with open(tempname, 'w') as tempfile:
+            json.dump(self.store, tempfile, indent=2)
+        shutil.move(tempname, file_path)
+        logger.info("Saved store in %s [%.2f msec]", file_path,
+                    (time.time() - start) * 1000)
 
     def load_plugins(self, plugins_config):
         plugins = {}
