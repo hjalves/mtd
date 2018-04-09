@@ -115,8 +115,11 @@ class App:
 
     def load_store_state(self):
         file_path = self.config['store_location']
-        with open(file_path) as f:
-            self.store = json.load(f)
+        try:
+            with open(file_path) as f:
+                self.store = json.load(f)
+        except FileNotFoundError as ex:
+            logger.warning(ex)
 
     def save_store_state(self):
         # TODO: this should not be blocking
