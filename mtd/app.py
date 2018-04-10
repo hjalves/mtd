@@ -68,9 +68,11 @@ class App:
             value = self.store.get(key, 0) + value
         else:
             value = value
+        old_value = self.store.get(key)
         self.store[key] = value
-        self.pubsub.publish(key, value)
-        logger.debug('[%s] %s: %r', metric_type, key, value)
+        if old_value != value:
+            self.pubsub.publish(key, value)
+            logger.debug('[%s] %s: %r', metric_type, key, value)
 
     async def main_loop(self):
         runner = await start_webapp(self.webapp, self.config['web'])
