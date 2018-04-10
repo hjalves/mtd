@@ -1,6 +1,7 @@
 import logging
 
 from autobahn.asyncio.component import Component
+from autobahn.wamp import RegisterOptions
 from txaio.aio import _TxaioLogWrapper
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ class WAMPSubscriber:
             self.session.publish('mtd.' + key, value)
 
 
-def create_component(config, pubsub):
+def create_component(config, pubsub, query_func):
     subscriber = WAMPSubscriber()
     comp = Component(
         transports=config['router'],
@@ -35,5 +36,9 @@ def create_component(config, pubsub):
         pubsub.unsubscribe(subscriber)
         subscriber.session = None
         logger.info("Session left! %s %s", session, details)
+
+    @comp.register('mtd.query')
+    async def query(*metrics):
+        return query_func(*metrics)
 
     return comp

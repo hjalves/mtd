@@ -38,7 +38,8 @@ class App:
         self.pubsub = MetricPubSub()
         self.config = self.load_config(self.config_file)
         self.webapp = create_webapp(self.config['web'], self.pubsub)
-        self.wamp = create_component(self.config['wamp'], self.pubsub)
+        self.wamp = create_component(self.config['wamp'], self.pubsub,
+                                     self.query)
 
     def run(self):
         config = self.config
@@ -61,6 +62,11 @@ class App:
             loop.run_until_complete(loop.shutdown_asyncgens())
             loop.close()
         return result
+
+    def query(self, *keys):
+        if '*' in keys:
+            return dict(self.store)
+        return {key: self.store.get(key) for key in keys}
 
     def push(self, plugin_name, metric_type, key, value):
         key = plugin_name + '.' + key
